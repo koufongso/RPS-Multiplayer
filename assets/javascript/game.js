@@ -81,6 +81,9 @@ function waitingPage() {
         // console.log(childSnapshot.val());
         if (childSnapshot.key != myKey) {
             $(`#opponent .name`).html(childSnapshot.val().name);
+            if(childSnapshot.val().ready){
+                $('#opponent .state').html("Ready");
+            }
         }
     });
 }
@@ -108,6 +111,40 @@ function notReady() {
     $('#me .btn-cancel-ready').addClass("btn-ready");
     $('#me .btn-cancel-ready').removeClass("btn-cancel-ready");
 }
+
+var readyCount = 0;
+
+/* synchornize the ready state to all the players' web page
+*/
+playersRef.on("child_changed", function (childSnapshot) {
+    // console.log(childSnapshot);
+    // console.log(childSnapshot.val());
+    if(childSnapshot.val().ready){
+        readyCount++;
+    }else{
+        readyCount--;
+    }
+
+    if (childSnapshot.key != myKey){
+        if(childSnapshot.val().ready) {
+            $(`#opponent .state`).html("Ready");
+        }else{
+            $(`#opponent .state`).html("Not Ready"); 
+        }
+    }
+
+    if(readyCount==2){
+        newGame();
+    }
+});
+
+
+
+
+function newGame(){
+    console.log("start new game!");
+}
+
 
 
 
