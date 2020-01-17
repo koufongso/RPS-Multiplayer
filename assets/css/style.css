@@ -1,0 +1,75 @@
+#main_panel{
+    width: 100%;
+    text-align: center;
+    overflow: auto;
+}
+
+/*---------log in page-----------------*/
+#input-name{
+    text-align: center;
+    height: 30px;
+    border-radius: 10px;
+    border:1px solid black;
+}
+
+#join{
+    border: none;
+    width: 100px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: gold;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: bolder;
+    color:white;
+    opacity: 0.7;
+}
+
+#join:hover{
+    cursor: pointer;
+    opacity: 1;
+}
+
+
+/*----------waiting page-----------------*/
+.player{
+    float:left;
+    box-sizing: border-box;
+    width: 40%;
+    padding:15px;
+}
+
+.player div{
+    padding:5px;
+    margin: 5px;
+    font-size: 36px;
+}
+
+#vs{
+    float:left;
+    box-sizing: border-box;
+    width:20%;
+}
+
+.btn{
+    padding:5px;
+    height: 40px;
+    width: 100px;
+    border-radius: 20px;
+    border: none;
+    color: white;
+    font-weight: bolder;
+    opacity: 0.8;
+}
+
+.btn:hover{
+    cursor: pointer;
+    opacity: 1;
+}
+
+.btn-ready{
+    background-color: green;
+}
+
+.btn-cancel-ready{
+    background-color: red;
+}

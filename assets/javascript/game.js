@@ -34,7 +34,7 @@ function logIn(event) {
         var total = snap.val();
         // only add this player when the total # of players is less than 2
         if (total < 2) {
-            var name = $('#name').val();            // get player's name
+            var name = $('#input-name').val();            // get player's name
             me = new Player(name);                  // create player
             var newPlayer = playersRef.push(me);    // add "me" to the database 
             myKey = newPlayer.key;                  // store the key in the database
@@ -68,7 +68,7 @@ function waitingPage() {
                                 <div class="name">(You) ${me.name}</div>
                                 <button class="btn btn-ready">Ready</button>
                             </div>
-                            <div class="img-vs"></div>
+                            <h1 id="vs">VS</h1>
                             <div class="player" id="opponent">
                                 <div class="state">Not Ready</div>
                                 <div class="name">Waiting...</div>
