@@ -44,7 +44,7 @@
     font-size: 36px;
 }
 
-#vs{
+#info{
     float:left;
     box-sizing: border-box;
     width:20%;
@@ -72,4 +72,22 @@
 
 .btn-cancel-ready{
     background-color: red;
+}
+
+
+/*-----------game page--------------*/
+img{
+    height: 100px;
+    margin: 15px;
+    border-radius: 50px;
+    border: 5px solid black;
+}
+
+#me .rps img{
+    opacity: 0.7;
+}
+
+#me .rps img:hover{
+    cursor: pointer;
+    opacity: 1;
 }

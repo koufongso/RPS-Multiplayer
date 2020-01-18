@@ -3,6 +3,7 @@ class Player{
         this.name=name;
         this.win = 0;
         this.lose = 0;
+        this.draw = 0;
         this.ready = false;
     }
 }

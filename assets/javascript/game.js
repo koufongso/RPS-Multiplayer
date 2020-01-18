@@ -68,11 +68,10 @@ function waitingPage() {
                                 <div class="name">(You) ${me.name}</div>
                                 <button class="btn btn-ready">Ready</button>
                             </div>
-                            <h1 id="vs">VS</h1>
+                            <div id="info"><h1 id="vs">VS</h1></div>
                             <div class="player" id="opponent">
                                 <div class="state">Not Ready</div>
                                 <div class="name">Waiting...</div>
-                                
                             </div>`);
 
     // waiting for opponent
@@ -81,7 +80,7 @@ function waitingPage() {
         // console.log(childSnapshot.val());
         if (childSnapshot.key != myKey) {
             $(`#opponent .name`).html(childSnapshot.val().name);
-            if(childSnapshot.val().ready){
+            if (childSnapshot.val().ready) {
                 $('#opponent .state').html("Ready");
             }
         }
@@ -117,36 +116,114 @@ var readyCount = 0;
 /* synchornize the ready state to all the players' web page
 */
 playersRef.on("child_changed", function (childSnapshot) {
-    // console.log(childSnapshot);
-    // console.log(childSnapshot.val());
-    if(childSnapshot.val().ready){
+    //console.log(childSnapshot);
+    //console.log(childSnapshot.val());
+    if (childSnapshot.val().ready) {
         readyCount++;
-    }else{
+    } else {
         readyCount--;
     }
 
-    if (childSnapshot.key != myKey){
-        if(childSnapshot.val().ready) {
+    if (childSnapshot.key != myKey) {
+        if (childSnapshot.val().ready) {
             $(`#opponent .state`).html("Ready");
-        }else{
-            $(`#opponent .state`).html("Not Ready"); 
+        } else {
+            $(`#opponent .state`).html("Not Ready");
         }
     }
 
-    if(readyCount==2){
+    if (readyCount == 2) {
+        playersRef.off();       //turn off database event listener
         newGame();
     }
 });
 
+var decisionCount=0;
+var opponentScore = 0;
 
-
-
-function newGame(){
+function newGame() {
     console.log("start new game!");
+    $('.state').remove();
+    $('.btn').remove();
+    $('#me').append(`<div class="rps">
+                        <img class="rock" data-val="rock" src="assets/images/rock.png">
+                        <img class="paper" data-val="paper" src="assets/images/paper.png">
+                        <img class="scissors" data-val="scissors" src="assets/images/scissors.png">
+                    </div>
+                    <div class="rps_final"></div>`);
+
+    $('#opponent').append(`<div class="rps">
+                                <img class="unknown" src="assets/images/unknown.png">
+                                <img class="unknown" src="assets/images/unknown.png">
+                                <img class="unknown" src="assets/images/unknown.png">
+                            </div>
+                            <div class="rps_final"></div>`);
+
+    $('#info').append(`<h1 id="score_panel"><span id="myScore">0</span>:<span id="opponentScore">${opponentScore}</span></h1>`);
+
+    // img click event lisener
+    $('#me .rps img').on("click",myChoice);
+
+    // when someone made a decision
+    playersRef.on("child_changed", function (childSnapshot) {
+        console.log("changed!");
+        decisionCount++;
+        if(childSnapshot.key!=myKey){
+            $('#opponent .rps img').css("visibility","hidden");
+            $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
+        }
+        if(decisionCount==2){
+            reveal();
+        }
+    })
+}
+
+/* update this player's rps choice
+*/
+function myChoice(){
+    var myrps = $(this).attr("data-val");
+    update("rps",myrps);
+    $('#me .rps img').css("visibility","hidden");
+    $('#me .rps_final').html(`<img data-val=${myrps} src="assets/images/${myrps}.png">`);
 }
 
 
 
+
+/* go to the database and check bath players' rps decision
+   , then show the result and start the next game
+*/
+function reveal(){
+    playersRef.off("child_changed");
+    console.log("reveal!");
+    playersRef.once('value').then(function (snap) {
+        // get results from the database
+        var val = snap.val();
+        var keys = Object.keys(val);
+        for(var i=0; i<keys.length ;i++){
+            if(keys[i]!=myKey){
+                var op_rps = val[keys[i]].rps;
+            }else{
+                var my_rps = val[keys[i]].rps;
+            }
+        }
+        // show opponent's rps
+        $('#opponent .rps_final').html(`<img data-val=${op_rps} src="assets/images/${op_rps}.png">`);
+        // calculate result and update database & score_panel
+        if(my_rps==op_rps){
+            console.log("draw");
+            update("draw",++me.draw);
+        }else if((my_rps=="rock" && op_rps=="scissors") || (my_rps=="paper" && op_rps=="rock") || (my_rps=="scissors" && op_rps=="paper")){
+            console.log("win");
+            update("win",++me.win);
+            $('#myScore').html(me.win);
+        }else{
+            console.log("lost");
+            update("lose",++me.lose);
+            $('#opponentScore').html(++opponentScore);
+        }
+    });    
+}
 
 
 /*helper function
@@ -155,3 +232,5 @@ function newGame(){
 function update(field, val) {
     playersRef.child(myKey + "/" + field).set(val);
 }
+
+
