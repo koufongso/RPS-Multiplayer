@@ -172,15 +172,15 @@ function newGame() {
             $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
         }
 
-        inputRef.once('value').then(function(snap){
+        inputRef.once('value').then(function (snap) {
             var val = snap.val();
             inputRef.set(++val);
         })
     });
 }
 
-inputRef.on("value", function(dataSnapshot){
-    if(dataSnapshot.val()==2){
+inputRef.on("value", function (dataSnapshot) {
+    if (dataSnapshot.val() == 2) {
         reveal();
     }
 });
@@ -195,8 +195,6 @@ function myChoice() {
     $('#me .rps_final').html(`<img data-val=${myrps} src="assets/images/${myrps}.png">`); // show the decision in the display div
     update("rps", myrps);                           // update database, trigger playerRef child_changed event listener
 }
-
-
 
 
 /* go to the database and check bath players' rps decision
@@ -248,15 +246,26 @@ function reset() {
 }
 
 
-
 var after;
 function nextGame() {
     console.log("next game!");
     reset();
+    playersRef.once('value').then(function (dataSnapshot) {
+        playersRef.on("child_changed", function (childSnapshot) {
+            console.log("dm!");
+            if (childSnapshot.key != myKey) {
+                $('#opponent .rps img').css("visibility", "hidden");
+                $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
+            }
+
+            inputRef.once('value').then(function(snap){
+                var val = snap.val();
+                inputRef.set(++val);
+            })
+        });
+    })
+
 }
-
-
-
 
 
 /*helper function
