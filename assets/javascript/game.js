@@ -18,7 +18,7 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const playersRef = database.ref("players");
 const totalRef = database.ref("total");
-
+const inputRef = database.ref("input");
 
 
 var me = null// store this player object
@@ -138,8 +138,11 @@ playersRef.on("child_changed", function (childSnapshot) {
     }
 });
 
-var decisionCount=0;
+var decisionCount = 0;
 var opponentScore = 0;
+
+// img click event listener
+$(document).on("click", '#me .rps img', myChoice);
 
 function newGame() {
     console.log("start new game!");
@@ -161,30 +164,36 @@ function newGame() {
 
     $('#info').append(`<h1 id="score_panel"><span id="myScore">0</span>:<span id="opponentScore">${opponentScore}</span></h1>`);
 
-    // img click event lisener
-    $('#me .rps img').on("click",myChoice);
-
     // when someone made a decision
     playersRef.on("child_changed", function (childSnapshot) {
-        console.log("changed!");
-        decisionCount++;
-        if(childSnapshot.key!=myKey){
-            $('#opponent .rps img').css("visibility","hidden");
+        console.log("dm!");
+        if (childSnapshot.key != myKey) {
+            $('#opponent .rps img').css("visibility", "hidden");
             $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
         }
-        if(decisionCount==2){
-            reveal();
-        }
-    })
+
+        inputRef.once('value').then(function(snap){
+            var val = snap.val();
+            inputRef.set(++val);
+        })
+    });
 }
+
+inputRef.on("value", function(dataSnapshot){
+    if(dataSnapshot.val()==2){
+        reveal();
+    }
+});
+
 
 /* update this player's rps choice
 */
-function myChoice(){
-    var myrps = $(this).attr("data-val");
-    update("rps",myrps);
-    $('#me .rps img').css("visibility","hidden");
-    $('#me .rps_final').html(`<img data-val=${myrps} src="assets/images/${myrps}.png">`);
+function myChoice() {
+    console.log("click!");
+    var myrps = $(this).attr("data-val");           // obtain "my" rps decision
+    $('#me .rps img').css("visibility", "hidden");  // hide options
+    $('#me .rps_final').html(`<img data-val=${myrps} src="assets/images/${myrps}.png">`); // show the decision in the display div
+    update("rps", myrps);                           // update database, trigger playerRef child_changed event listener
 }
 
 
@@ -193,43 +202,68 @@ function myChoice(){
 /* go to the database and check bath players' rps decision
    , then show the result and start the next game
 */
-function reveal(){
-    playersRef.off("child_changed");
+function reveal() {
+    playersRef.off("child_changed"); // turn off the database event listener
     console.log("reveal!");
     playersRef.once('value').then(function (snap) {
         // get results from the database
         var val = snap.val();
         var keys = Object.keys(val);
-        for(var i=0; i<keys.length ;i++){
-            if(keys[i]!=myKey){
+        for (var i = 0; i < keys.length; i++) {
+            if (keys[i] != myKey) {
                 var op_rps = val[keys[i]].rps;
-            }else{
+            } else {
                 var my_rps = val[keys[i]].rps;
             }
         }
         // show opponent's rps
         $('#opponent .rps_final').html(`<img data-val=${op_rps} src="assets/images/${op_rps}.png">`);
+
         // calculate result and update database & score_panel
-        if(my_rps==op_rps){
+        if (my_rps == op_rps) {
             console.log("draw");
-            update("draw",++me.draw);
-        }else if((my_rps=="rock" && op_rps=="scissors") || (my_rps=="paper" && op_rps=="rock") || (my_rps=="scissors" && op_rps=="paper")){
+            update("draw", ++me.draw);
+        } else if ((my_rps == "rock" && op_rps == "scissors") || (my_rps == "paper" && op_rps == "rock") || (my_rps == "scissors" && op_rps == "paper")) {
             console.log("win");
-            update("win",++me.win);
+            update("win", ++me.win);
             $('#myScore').html(me.win);
-        }else{
+        } else {
             console.log("lost");
-            update("lose",++me.lose);
+            update("lose", ++me.lose);
             $('#opponentScore').html(++opponentScore);
         }
-    });    
+
+        // go to next game
+        nextGame();
+    });
 }
+
+function reset() {
+    console.log("reset");
+    playersRef.off("child_changed");
+    $('.rps img').css("visibility", "visible");
+    $('.rps_final').empty();
+    playersRef.child(myKey + "/rps").remove();
+    inputRef.set(0);
+}
+
+
+
+var after;
+function nextGame() {
+    console.log("next game!");
+    reset();
+}
+
+
+
 
 
 /*helper function
   update field in database
 */
 function update(field, val) {
+    console.log("set " + field + " = " + val);
     playersRef.child(myKey + "/" + field).set(val);
 }
 
