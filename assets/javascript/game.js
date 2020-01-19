@@ -237,7 +237,8 @@ function reveal(opponentDecision) {
     }
         // show opponent's rps
         $('#opponent .rps_final').html(`<img data-val=${opponentDecision} src="assets/images/${opponentDecision}.png">`);
-        reset();
+        
+        setTimeout(reset, 2000);
 }
 
 /**
