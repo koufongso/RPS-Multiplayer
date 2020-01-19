@@ -330,5 +330,5 @@ function sendMessage(event) {
  */
 chatBoxRef.on("child_added",function(childSnapshot){
     var obj = childSnapshot.val();
-    $('#chatWindow').append(`<p class="msg">${obj.name}:${obj.msg}<span class="timestamp">${obj.time.split(" ")[4]}</span></p>`);
+    $('#chatWindow').append(`<p class="chat-msg"><span class="chat-timestamp">${obj.time.split(" ")[4]}</span><span class="chat-name">${obj.name}</span>:<span class="chat-body">${obj.msg}</span></p>`);
 })
