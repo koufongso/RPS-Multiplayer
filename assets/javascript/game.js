@@ -27,6 +27,11 @@ var myKey = undefined;
 $(document).on("click", "#join", () => { logIn(event) });
 $(window).on("beforeunload", logOut);
 
+/**
+ * if the database has less than 2 people,
+ * create a player object (me) and add this object in the database
+ * @param {object} event <form> click event object 
+ */
 function logIn(event) {
     event.preventDefault();
     // check the current players
@@ -46,6 +51,9 @@ function logIn(event) {
     });
 }
 
+/**
+ * remove this players when the page is about to be closed or refreshed
+ */
 function logOut() {
     if (me != null) {
         totalRef.once('value').then(function (snap) {
@@ -58,9 +66,10 @@ function logOut() {
     return "log out";
 }
 
-/* display a new page for waiting opponent
-   when both player pressed a "ready" button, start a new game
-*/
+
+/**
+ * display a new page for "waiting room" and for the game
+ */
 function waitingPage() {
     $('#main_panel').empty();
     $('#main_panel').html(`<div class="clear_fix" id="main_content">
@@ -100,8 +109,9 @@ function waitingPage() {
 $(document).on("click", ".btn-ready", getReady);
 $(document).on("click", ".btn-cancel-ready", notReady);
 
-/* change the this player's ready state to true and synchornize the database
-*/
+/**
+ * change the this player's ready state to true and synchornize the database
+ */
 function getReady() {
     me.ready = true;
     update("ready", true);
@@ -111,7 +121,9 @@ function getReady() {
     $('#me .btn-ready').removeClass("btn-ready");
 }
 
-
+/**
+ * change the this player's ready state to false and synchornize the database
+ */
 function notReady() {
     me.ready = false;
     update("ready", false);
@@ -121,10 +133,12 @@ function notReady() {
     $('#me .btn-cancel-ready').removeClass("btn-cancel-ready");
 }
 
-var readyCount = 0;
+var readyCount = 0; // a variable to keep track of both player's ready states
 
-/* synchornize the ready state to all the players' web page
-*/
+/**
+ * synchornize the ready state to all the players' web page
+ * if both player's are ready, start a new game (call function newGame())
+ */
 playersRef.on("child_changed", function (childSnapshot) {
     //console.log(childSnapshot);
     //console.log(childSnapshot.val());
@@ -148,10 +162,9 @@ playersRef.on("child_changed", function (childSnapshot) {
     }
 });
 
-var decisionCount = 0;
-var opponentScore = 0;
+var opponentScore = 0;          // a variable to keep track of oppoent's score
 
-// img click event listener
+// click event listener for rock paper scissors input
 $(document).on("click", '#me .rps img', myChoice);
 
 function newGame() {
@@ -196,8 +209,9 @@ inputRef.on("value", function (dataSnapshot) {
 });
 
 
-/* update this player's rps choice
-*/
+/**
+ * update this player's rps choice in the database and also display an unknown decision on the opponent's web page
+ */
 function myChoice() {
     console.log("click!");
     var myrps = $(this).attr("data-val");           // obtain "my" rps decision
@@ -207,9 +221,10 @@ function myChoice() {
 }
 
 
-/* go to the database and check bath players' rps decision
-   , then show the result and start the next game
-*/
+/**
+ * go to the database and check bath players' rps decision
+ * then show the result and start the next game
+ */
 function reveal() {
     playersRef.off("child_changed"); // turn off the database event listener
     console.log("reveal!");
@@ -246,17 +261,21 @@ function reveal() {
     });
 }
 
+/**
+ * it reset every thing since the newGame() was called
+ */
 function reset() {
     console.log("reset");
-    playersRef.off("child_changed");
-    $('.rps img').css("visibility", "visible");
-    $('.rps_final').empty();
-    playersRef.child(myKey + "/rps").remove();
-    inputRef.set(0);
+    playersRef.off("child_changed");              // turn off event listener 
+    $('.rps img').css("visibility", "visible");   // show rps option
+    $('.rps_final').empty();                      // remove previous game fianl decision
+    playersRef.child(myKey + "/rps").remove();    // remove rps decision in the database, or it won't trigger the child_changed if player made the same decision
+    inputRef.set(0);                              // reset the input counter in the database
 }
 
-
-var after;
+/**
+ * continue the game
+ */
 function nextGame() {
     console.log("next game!");
     reset();
@@ -277,9 +296,11 @@ function nextGame() {
 }
 
 
-/*helper function
-  update field in database
-*/
+/**
+ * helper function that update "my" data in the database
+ * @param {string} field field that wants to be modified/update 
+ * @param {string/number} val new value 
+ */
 function update(field, val) {
     console.log("set " + field + " = " + val);
     playersRef.child(myKey + "/" + field).set(val);
