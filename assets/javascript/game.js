@@ -18,7 +18,6 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const playersRef = database.ref("players");
 const totalRef = database.ref("total");
-const inputRef = database.ref("input");
 const chatBoxRef = database.ref("chatBox");
 
 
@@ -163,7 +162,7 @@ var myDecision = undefined;
 $(document).on("click", '#me .rps img', myChoice);
 var test
 function newGame() {
-    console.log("start new game!");
+    // console.log("start new game!");
     $('.state').remove();
     $('.btn').remove();
     $('#me').append(`<div class="rps">
@@ -222,16 +221,16 @@ function myChoice() {
  * then show the result and start the next game
  */
 function reveal(opponentDecision) {
-    console.log("reveal!");
+    // console.log("reveal!");
     if (myDecision == opponentDecision) {
-        console.log("draw");
+        // console.log("draw");
         update("draw", ++me.draw);
     } else if ((myDecision == "rock" && opponentDecision == "scissors") || (myDecision == "paper" && opponentDecision == "rock") || (myDecision == "scissors" && opponentDecision == "paper")) {
-        console.log("win");
+        // console.log("win");
         update("win", ++me.win);
         $('#myScore').html(me.win);
     } else {
-        console.log("lost");
+        // console.log("lost");
         update("lose", ++me.lose);
         $('#opponentScore').html(++opponentScore);
     }
@@ -245,12 +244,11 @@ function reveal(opponentDecision) {
  * it reset every thing to the begining of newGame() 
  */
 function reset() {
-    console.log("reset");
+    // console.log("reset");
     myDecision = undefined;
     $('.rps img').css("visibility", "visible");   // show rps option
     $('.rps_final').empty();                      // remove previous game fianl decision
     playersRef.child(myKey + "/rps").remove();    // remove rps decision in the database, or it won't trigger the child_changed if player made the same decision
-    inputRef.set(0);                              // reset the input counter in the database
 }
 
 
@@ -260,7 +258,7 @@ function reset() {
  * @param {string/number} val new value 
  */
 function update(field, val) {
-    console.log("set " + field + " = " + val);
+    // console.log("set " + field + " = " + val);
     playersRef.child(myKey + "/" + field).set(val);
 }
 
@@ -277,11 +275,13 @@ $(document).on("click", "#chat-send", () => { sendMessage(event) });
 function sendMessage(event) {
     event.preventDefault();
     var msg = $('#chat-input').val();     // get text/message
-    $('#chat-input').val("");             // clear input text
-    console.log(msg);
-
-    // push this message to the database
-    chatBoxRef.push(new Message(me.name, Date(), msg));
+    if(msg!=""){
+        $('#chat-input').val("");             // clear input text
+        // console.log(msg);
+    
+        // push this message to the database
+        chatBoxRef.push(new Message(me.name, Date(), msg));
+    }
 }
 
 /**
@@ -291,4 +291,7 @@ function sendMessage(event) {
 chatBoxRef.on("child_added", function (childSnapshot) {
     var obj = childSnapshot.val();
     $('#chatWindow').append(`<p class="chat-msg"><span class="chat-timestamp">${obj.time.split(" ")[4]}</span><span class="chat-name">${obj.name}</span>:<span class="chat-body">${obj.msg}</span></p>`);
+
+    // auto scrolling
+    $('#chatWindow').stop().animate({scrollTop:$('#chatWindow')[0].scrollHeight},500);
 })
