@@ -1,3 +1,10 @@
+.clear_fix::after{
+    content: "";
+    display: block;
+    clear:both;
+}
+
+
 #main_panel{
     width: 100%;
     text-align: center;
@@ -73,6 +80,40 @@
 .btn-cancel-ready{
     background-color: red;
 }
+
+/* chatbox */
+#chatBox{
+    box-sizing: border-box;
+    width:100%;
+    position: absolute;
+    bottom:0px;
+    left:0px;
+    background-color: lightblue;
+    padding:30px;
+}
+
+#chatWindow{
+    box-sizing: border-box;
+    width: 100%;
+    height: 150px;
+    overflow-y: scroll;
+    border:1px solid black;
+    background-color: aliceblue;
+    margin-bottom:5px;
+}
+
+#chat-input{
+    box-sizing: border-box;
+    float: left;
+    width:95%;
+}
+
+#chat-send{
+    float:left;
+    width:5%;
+}
+
+
 
 
 /*-----------game page--------------*/

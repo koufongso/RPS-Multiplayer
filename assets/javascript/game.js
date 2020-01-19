@@ -63,15 +63,25 @@ function logOut() {
 */
 function waitingPage() {
     $('#main_panel').empty();
-    $('#main_panel').html(`<div class="player" id="me">
-                                <div class="state">Not Ready</div>
-                                <div class="name">(You) ${me.name}</div>
-                                <button class="btn btn-ready">Ready</button>
-                            </div>
-                            <div id="info"><h1 id="vs">VS</h1></div>
-                            <div class="player" id="opponent">
-                                <div class="state">Not Ready</div>
-                                <div class="name">Waiting...</div>
+    $('#main_panel').html(`<div class="clear_fix" id="main_content">
+                                <div class="player" id="me">
+                                    <div class="state">Not Ready</div>
+                                    <div class="name">(You) ${me.name}</div>
+                                    <button class="btn btn-ready">Ready</button>
+                                </div>
+                                <div id="info"><h1 id="vs">VS</h1></div>
+                                <div class="player" id="opponent">
+                                    <div class="state">Not Ready</div>
+                                    <div class="name">Waiting...</div>
+                                </div>
+                            </div>`);
+    
+    // chatBox
+    $('#main_panel').append(`<div id="chatBox">Chat<div id="chatWindow"></div>
+                                <form>
+                                    <input id="chat-input" type="text" placeholder="Message">
+                                    <input id="chat-send" type="submit" value="Send">
+                                </form>
                             </div>`);
 
     // waiting for opponent
@@ -250,6 +260,7 @@ var after;
 function nextGame() {
     console.log("next game!");
     reset();
+
     playersRef.once('value').then(function (dataSnapshot) {
         playersRef.on("child_changed", function (childSnapshot) {
             console.log("dm!");
@@ -257,14 +268,12 @@ function nextGame() {
                 $('#opponent .rps img').css("visibility", "hidden");
                 $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
             }
-
             inputRef.once('value').then(function(snap){
                 var val = snap.val();
                 inputRef.set(++val);
             })
         });
     })
-
 }
 
 
