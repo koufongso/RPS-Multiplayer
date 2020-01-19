@@ -24,6 +24,8 @@ const chatBoxRef = database.ref("chatBox");
 
 var me = null// store this player object
 var myKey = undefined;
+var opponentKey = undefined;
+
 // add this player to the database
 $(document).on("click", "#join", () => { logIn(event) });
 $(window).on("beforeunload", logOut);
@@ -96,17 +98,32 @@ function waitingPage() {
 
     // waiting for opponent
     playersRef.on("child_added", function (childSnapshot) {
-        // console.log(childSnapshot);
-        // console.log(childSnapshot.val());
         if (childSnapshot.key != myKey) {
+            // opponent joined
+            opponentKey = childSnapshot.key;
             $(`#opponent .name`).html(childSnapshot.val().name);
             if (childSnapshot.val().ready) {
                 $('#opponent .state').html("Ready");
             }
+
+            // now listen the ready state changed in opponent
+            playersRef.child(opponentKey + "/ready").on("value", function (snap) {
+                // onsole.log("opponent changed ready state!");
+                // console.log(snap);
+                if (snap.val()) {
+                    $(`#opponent .state`).html("Ready");
+                    if (me.ready) {
+                        newGame();
+                    }
+                } else {
+                    $(`#opponent .state`).html("Not Ready");
+                }
+            });
         }
     });
 }
 
+// ready and cancel ready button for player
 $(document).on("click", ".btn-ready", getReady);
 $(document).on("click", ".btn-cancel-ready", notReady);
 
@@ -120,6 +137,12 @@ function getReady() {
     $('#me .btn-ready').html("Cancel");
     $('#me .btn-ready').addClass("btn-cancel-ready");
     $('#me .btn-ready').removeClass("btn-ready");
+    // check if the opponent is ready
+    playersRef.child(opponentKey + "/ready").once('value', function (snap) {
+        if (snap.val()) {
+            newGame();
+        }
+    });
 }
 
 /**
@@ -134,40 +157,11 @@ function notReady() {
     $('#me .btn-cancel-ready').removeClass("btn-cancel-ready");
 }
 
-var readyCount = 0; // a variable to keep track of both player's ready states
-
-/**
- * synchornize the ready state to all the players' web page
- * if both player's are ready, start a new game (call function newGame())
- */
-playersRef.on("child_changed", function (childSnapshot) {
-    //console.log(childSnapshot);
-    //console.log(childSnapshot.val());
-    if (childSnapshot.val().ready) {
-        readyCount++;
-    } else {
-        readyCount--;
-    }
-
-    if (childSnapshot.key != myKey) {
-        if (childSnapshot.val().ready) {
-            $(`#opponent .state`).html("Ready");
-        } else {
-            $(`#opponent .state`).html("Not Ready");
-        }
-    }
-
-    if (readyCount == 2) {
-        playersRef.off();       //turn off database event listener
-        newGame();
-    }
-});
-
 var opponentScore = 0;          // a variable to keep track of oppoent's score
-
+var myDecision = undefined;
 // click event listener for rock paper scissors input
 $(document).on("click", '#me .rps img', myChoice);
-
+var test
 function newGame() {
     console.log("start new game!");
     $('.state').remove();
@@ -188,26 +182,19 @@ function newGame() {
 
     $('#info').append(`<h1 id="score_panel"><span id="myScore">0</span>:<span id="opponentScore">${opponentScore}</span></h1>`);
 
-    // when someone made a decision
-    playersRef.on("child_changed", function (childSnapshot) {
-        console.log("dm!");
-        if (childSnapshot.key != myKey) {
+    // now listen when the opponent made decision
+    playersRef.child(opponentKey + "/rps").on("value", function (snap) {
+        var opponentDecision = snap.val();
+        if (opponentDecision != null) {
+            console.log("opponent made decision!");
             $('#opponent .rps img').css("visibility", "hidden");
             $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
+            if (myDecision != undefined) {
+                reveal(opponentDecision);
+            }
         }
-
-        inputRef.once('value').then(function (snap) {
-            var val = snap.val();
-            inputRef.set(++val);
-        })
     });
 }
-
-inputRef.on("value", function (dataSnapshot) {
-    if (dataSnapshot.val() == 2) {
-        reveal();
-    }
-});
 
 
 /**
@@ -215,10 +202,18 @@ inputRef.on("value", function (dataSnapshot) {
  */
 function myChoice() {
     console.log("click!");
-    var myrps = $(this).attr("data-val");           // obtain "my" rps decision
+    myDecision = $(this).attr("data-val");           // obtain "my" rps decision
     $('#me .rps img').css("visibility", "hidden");  // hide options
-    $('#me .rps_final').html(`<img data-val=${myrps} src="assets/images/${myrps}.png">`); // show the decision in the display div
-    update("rps", myrps);                           // update database, trigger playerRef child_changed event listener
+    $('#me .rps_final').html(`<img data-val=${myDecision} src="assets/images/${myDecision}.png">`); // show the decision in the display div
+    update("rps", myDecision);                           // update database, trigger playerRef child_changed event listener
+
+    // check if opponent made decision
+    playersRef.child(opponentKey + "/rps").once('value', function (snap) {
+        var opponentDecision = snap.val();
+        if (opponentDecision != null) {
+            reveal(opponentDecision);
+        }
+    });
 }
 
 
@@ -226,74 +221,35 @@ function myChoice() {
  * go to the database and check bath players' rps decision
  * then show the result and start the next game
  */
-function reveal() {
-    playersRef.off("child_changed"); // turn off the database event listener
+function reveal(opponentDecision) {
     console.log("reveal!");
-    playersRef.once('value').then(function (snap) {
-        // get results from the database
-        var val = snap.val();
-        var keys = Object.keys(val);
-        for (var i = 0; i < keys.length; i++) {
-            if (keys[i] != myKey) {
-                var op_rps = val[keys[i]].rps;
-            } else {
-                var my_rps = val[keys[i]].rps;
-            }
-        }
+    if (myDecision == opponentDecision) {
+        console.log("draw");
+        update("draw", ++me.draw);
+    } else if ((myDecision == "rock" && opponentDecision == "scissors") || (myDecision == "paper" && opponentDecision == "rock") || (myDecision == "scissors" && opponentDecision == "paper")) {
+        console.log("win");
+        update("win", ++me.win);
+        $('#myScore').html(me.win);
+    } else {
+        console.log("lost");
+        update("lose", ++me.lose);
+        $('#opponentScore').html(++opponentScore);
+    }
         // show opponent's rps
-        $('#opponent .rps_final').html(`<img data-val=${op_rps} src="assets/images/${op_rps}.png">`);
-
-        // calculate result and update database & score_panel
-        if (my_rps == op_rps) {
-            console.log("draw");
-            update("draw", ++me.draw);
-        } else if ((my_rps == "rock" && op_rps == "scissors") || (my_rps == "paper" && op_rps == "rock") || (my_rps == "scissors" && op_rps == "paper")) {
-            console.log("win");
-            update("win", ++me.win);
-            $('#myScore').html(me.win);
-        } else {
-            console.log("lost");
-            update("lose", ++me.lose);
-            $('#opponentScore').html(++opponentScore);
-        }
-
-        // go to next game
-        nextGame();
-    });
+        $('#opponent .rps_final').html(`<img data-val=${opponentDecision} src="assets/images/${opponentDecision}.png">`);
+        reset();
 }
 
 /**
- * it reset every thing since the newGame() was called
+ * it reset every thing to the begining of newGame() 
  */
 function reset() {
     console.log("reset");
-    playersRef.off("child_changed");              // turn off event listener 
+    myDecision = undefined;
     $('.rps img').css("visibility", "visible");   // show rps option
     $('.rps_final').empty();                      // remove previous game fianl decision
     playersRef.child(myKey + "/rps").remove();    // remove rps decision in the database, or it won't trigger the child_changed if player made the same decision
     inputRef.set(0);                              // reset the input counter in the database
-}
-
-/**
- * continue the game
- */
-function nextGame() {
-    console.log("next game!");
-    reset();
-
-    playersRef.once('value').then(function (dataSnapshot) {
-        playersRef.on("child_changed", function (childSnapshot) {
-            console.log("dm!");
-            if (childSnapshot.key != myKey) {
-                $('#opponent .rps img').css("visibility", "hidden");
-                $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
-            }
-            inputRef.once('value').then(function (snap) {
-                var val = snap.val();
-                inputRef.set(++val);
-            })
-        });
-    })
 }
 
 
@@ -307,8 +263,11 @@ function update(field, val) {
     playersRef.child(myKey + "/" + field).set(val);
 }
 
+
+/*--------------chatBox-------------------------*/
+
 // send message button event listener
-$(document).on("click", "#chat-send", () => {sendMessage(event)} );
+$(document).on("click", "#chat-send", () => { sendMessage(event) });
 
 
 /**
@@ -321,14 +280,14 @@ function sendMessage(event) {
     console.log(msg);
 
     // push this message to the database
-    chatBoxRef.push(new Message(me.name,Date(),msg));
+    chatBoxRef.push(new Message(me.name, Date(), msg));
 }
 
 /**
  * chatBox child added event <=> new message was pushed in
  * append the new message to the chatWindow 
  */
-chatBoxRef.on("child_added",function(childSnapshot){
+chatBoxRef.on("child_added", function (childSnapshot) {
     var obj = childSnapshot.val();
     $('#chatWindow').append(`<p class="chat-msg"><span class="chat-timestamp">${obj.time.split(" ")[4]}</span><span class="chat-name">${obj.name}</span>:<span class="chat-body">${obj.msg}</span></p>`);
 })
