@@ -234,10 +234,10 @@ function reveal(opponentDecision) {
         update("lose", ++me.lose);
         $('#opponentScore').html(++opponentScore);
     }
-        // show opponent's rps
-        $('#opponent .rps_final').html(`<img data-val=${opponentDecision} src="assets/images/${opponentDecision}.png">`);
-        
-        setTimeout(reset, 2000);
+    // show opponent's rps
+    $('#opponent .rps_final').html(`<img data-val=${opponentDecision} src="assets/images/${opponentDecision}.png">`);
+
+    setTimeout(reset, 1000);
 }
 
 /**
@@ -246,10 +246,14 @@ function reveal(opponentDecision) {
 function reset() {
     // console.log("reset");
     myDecision = undefined;
-    $('.rps img').css("visibility", "visible");   // show rps option
-    $('.rps_final').empty();                      // remove previous game fianl decision
-    playersRef.child(myKey + "/rps").remove();    // remove rps decision in the database, or it won't trigger the child_changed if player made the same decision
+    playersRef.child(myKey + "/rps").remove()    // remove rps decision in the database, or it won't trigger the child_changed if player made the same decision
+        .then(function () {
+            $('.rps img').css("visibility", "visible");   // show rps option
+            $('.rps_final').empty();                      // remove previous game fianl decision
+        });
 }
+
+
 
 
 /**
@@ -275,10 +279,10 @@ $(document).on("click", "#chat-send", () => { sendMessage(event) });
 function sendMessage(event) {
     event.preventDefault();
     var msg = $('#chat-input').val();     // get text/message
-    if(msg!=""){
+    if (msg != "") {
         $('#chat-input').val("");             // clear input text
         // console.log(msg);
-    
+
         // push this message to the database
         chatBoxRef.push(new Message(me.name, Date(), msg));
     }
@@ -293,5 +297,5 @@ chatBoxRef.on("child_added", function (childSnapshot) {
     $('#chatWindow').append(`<p class="chat-msg"><span class="chat-timestamp">${obj.time.split(" ")[4]}</span><span class="chat-name">${obj.name}</span>:<span class="chat-body">${obj.msg}</span></p>`);
 
     // auto scrolling
-    $('#chatWindow').stop().animate({scrollTop:$('#chatWindow')[0].scrollHeight},500);
+    $('#chatWindow').stop().animate({ scrollTop: $('#chatWindow')[0].scrollHeight }, 500);
 })
