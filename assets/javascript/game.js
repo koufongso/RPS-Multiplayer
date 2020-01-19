@@ -19,6 +19,7 @@ const database = firebase.database();
 const playersRef = database.ref("players");
 const totalRef = database.ref("total");
 const inputRef = database.ref("input");
+const chatBoxRef = database.ref("chatBox");
 
 
 var me = null// store this player object
@@ -84,7 +85,7 @@ function waitingPage() {
                                     <div class="name">Waiting...</div>
                                 </div>
                             </div>`);
-    
+
     // chatBox
     $('#main_panel').append(`<div id="chatBox">Chat<div id="chatWindow"></div>
                                 <form>
@@ -287,7 +288,7 @@ function nextGame() {
                 $('#opponent .rps img').css("visibility", "hidden");
                 $('#opponent .rps_final').html(`<img class="unknown" src="assets/images/unknown.png">`);
             }
-            inputRef.once('value').then(function(snap){
+            inputRef.once('value').then(function (snap) {
                 var val = snap.val();
                 inputRef.set(++val);
             })
@@ -306,4 +307,28 @@ function update(field, val) {
     playersRef.child(myKey + "/" + field).set(val);
 }
 
+// send message button event listener
+$(document).on("click", "#chat-send", () => {sendMessage(event)} );
 
+
+/**
+ * push the text/message to the database "chatBox"
+ */
+function sendMessage(event) {
+    event.preventDefault();
+    var msg = $('#chat-input').val();     // get text/message
+    $('#chat-input').val("");             // clear input text
+    console.log(msg);
+
+    // push this message to the database
+    chatBoxRef.push(new Message(me.name,Date(),msg));
+}
+
+/**
+ * chatBox child added event <=> new message was pushed in
+ * append the new message to the chatWindow 
+ */
+chatBoxRef.on("child_added",function(childSnapshot){
+    var obj = childSnapshot.val();
+    $('#chatWindow').append(`<p class="msg">${obj.name}:${obj.msg}<span class="timestamp">${obj.time.split(" ")[4]}</span></p>`);
+})

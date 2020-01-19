@@ -8,3 +8,12 @@ class Player{
     }
 }
 
+
+class Message{
+    constructor(sender,time,msg){
+        this.name = sender;
+        this.msg = msg;
+        this.time = time;
+    }
+}
+
