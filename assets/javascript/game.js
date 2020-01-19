@@ -88,7 +88,7 @@ function waitingPage() {
                             </div>`);
 
     // chatBox
-    $('#main_panel').append(`<div id="chatBox">Chat<div id="chatWindow"></div>
+    $('#main_panel').append(`<div id="chatBox"><div id="chatWindow"></div>
                                 <form>
                                     <input id="chat-input" type="text" placeholder="Message">
                                     <input id="chat-send" type="submit" value="Send">
@@ -284,7 +284,7 @@ function sendMessage(event) {
         // console.log(msg);
 
         // push this message to the database
-        chatBoxRef.push(new Message(me.name, Date(), msg));
+        chatBoxRef.push(new Message(myKey, me.name, Date(), msg));
     }
 }
 
@@ -293,9 +293,22 @@ function sendMessage(event) {
  * append the new message to the chatWindow 
  */
 chatBoxRef.on("child_added", function (childSnapshot) {
-    var obj = childSnapshot.val();
-    $('#chatWindow').append(`<p class="chat-msg"><span class="chat-timestamp">${obj.time.split(" ")[4]}</span><span class="chat-name">${obj.name}</span>:<span class="chat-body">${obj.msg}</span></p>`);
+    // only append the message after the user join the room (after chatbox is added to the web page)
+    if ($('#chatWindow')[0] != undefined) {
+        console.log("add msg");
+        var obj = childSnapshot.val();
 
-    // auto scrolling
-    $('#chatWindow').stop().animate({ scrollTop: $('#chatWindow')[0].scrollHeight }, 500);
+        if (obj.sender_id == myKey) {
+            $('#chatWindow').append(`<p class="chat-msg chat-my-msg">
+                                            <span class="chat-body">${obj.msg}</span>:<span class="chat-name">${obj.sender_name}</span>
+                                            <span class="chat-timestamp">${obj.time.split(" ")[4]}</span></p>`);
+        } else {
+            $('#chatWindow').append(`<p class="chat-msg">
+                                            <span class="chat-timestamp">${obj.time.split(" ")[4]}</span>
+                                            <span class="chat-name">${obj.sender_name}</span>:<span class="chat-body">${obj.msg}</span></p>`);
+        }
+
+        // auto scrolling
+        $('#chatWindow').stop().animate({ scrollTop: $('#chatWindow')[0].scrollHeight }, 500);
+    }
 })

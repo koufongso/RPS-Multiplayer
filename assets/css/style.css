@@ -88,7 +88,7 @@
     position: absolute;
     bottom:0px;
     left:0px;
-    background-color: lightblue;
+    background-color: lightcyan;
     padding:30px;
 }
 
@@ -98,7 +98,7 @@
     height: 150px;
     overflow-y: scroll;
     border:1px solid black;
-    background-color: aliceblue;
+    background-color: white;
     margin-bottom:5px;
     text-align: left;
 }
@@ -115,12 +115,20 @@
 }
 
 .chat-msg{
-    margin:0;
+    margin:5px;
     text-align: left;
+    padding:5px;
+}
+
+.chat-my-msg{
+    margin:5px;
+    text-align: right;
+    padding:5px;
 }
 
 .chat-timestamp{
     margin:0 10px 0 5px;
+
 }
 
 .chat-name{
@@ -128,7 +136,13 @@
 }
 
 .chat-body{
-    margin-left:5px;
+    display: inline-block;
+    margin:0 5px;
+    background-color: lightgreen;
+    padding:2px 15px;
+    height:20px;
+    border-radius: 10px;
+    color: black;
 }
 
 

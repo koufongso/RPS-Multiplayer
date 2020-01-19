@@ -10,8 +10,9 @@ class Player{
 
 
 class Message{
-    constructor(sender,time,msg){
-        this.name = sender;
+    constructor(id,sender,time,msg){
+        this.sender_id = id
+        this.sender_name = sender;
         this.msg = msg;
         this.time = time;
     }
