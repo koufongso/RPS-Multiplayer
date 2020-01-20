@@ -222,22 +222,27 @@ function myChoice() {
  */
 function reveal(opponentDecision) {
     // console.log("reveal!");
+    // show opponent's rps
+    $('#opponent .rps_final').html(`<img data-val=${opponentDecision} src="assets/images/${opponentDecision}.png">`);
+
     if (myDecision == opponentDecision) {
         // console.log("draw");
         update("draw", ++me.draw);
+        setTimeout(()=>{notify("It is a draw!")},500);
     } else if ((myDecision == "rock" && opponentDecision == "scissors") || (myDecision == "paper" && opponentDecision == "rock") || (myDecision == "scissors" && opponentDecision == "paper")) {
         // console.log("win");
         update("win", ++me.win);
         $('#myScore').html(me.win);
+        setTimeout(()=>{notify("You win!")},500);
     } else {
         // console.log("lost");
         update("lose", ++me.lose);
         $('#opponentScore').html(++opponentScore);
+        setTimeout(()=>{notify("You lose!")},500);
     }
-    // show opponent's rps
-    $('#opponent .rps_final').html(`<img data-val=${opponentDecision} src="assets/images/${opponentDecision}.png">`);
 
-    setTimeout(reset, 1000);
+
+    setTimeout(reset, 1500);
 }
 
 /**
@@ -254,8 +259,6 @@ function reset() {
 }
 
 
-
-
 /**
  * helper function that update "my" data in the database
  * @param {string} field field that wants to be modified/update 
@@ -266,6 +269,16 @@ function update(field, val) {
     playersRef.child(myKey + "/" + field).set(val);
 }
 
+
+/**
+ * helper function that will notify the "me" by showing the message on "my side"
+ * @param {string} msg message that will show on the screen
+ */
+function notify(msg) {
+    if (msg != "") {
+        $('#me .rps_final').html(`<h1 class="message-result">${msg}</h1>`);
+    }
+}
 
 /*--------------chatBox-------------------------*/
 
